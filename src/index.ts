@@ -17,8 +17,49 @@ let taskInfo: {
 // Event Listener
 taskInput.addEventListener("keyup", saveTask);
 
-//function
+// window
+window.updateStatus = updateStatus;
 
+// Function
+function showTodo() {
+  let li = "";
+  todos.forEach((todo, id) => {
+    // if todo status is completed, set the isCompleted value checked
+    let isCompleted = todo.taskStatus === "completed" ? "checked" : "";
+    li += `<li class="task">
+            <div>
+              <input onchange="updateStatus(this)" type="checkbox" id="${id}" ${isCompleted}>
+              <span ondblclick="editTask(this)" class="${id} ${isCompleted}">${todo.taskValue}</span>
+            </div>
+            <div class="task-close">
+              <i onclick="deleteTask(${id})" class="fa-solid fa-xmark"></i>
+            </div>
+          </li>`;
+  });
+  taskBox.innerHTML = li;
+}
+showTodo();
+
+// check iput
+function updateStatus(selectedTask: HTMLInputElement) {
+  // Getting paragraph that contains task name
+  let taskName = <HTMLSpanElement>selectedTask.parentElement?.lastElementChild;
+  // Getting ID
+  let id = Number(selectedTask.id);
+
+  if (selectedTask.checked) {
+    taskName.classList.add("checked");
+    // updating the status of selected task to completed
+    todos[id].taskStatus = "completed";
+  } else {
+    taskName.classList.remove("checked");
+    // updating the status of selected task to pending
+    todos[id].taskStatus = "pending";
+  }
+  localStorage.setItem("todo-list", JSON.stringify(todos));
+}
+
+// Save to local
 function saveTask(e: KeyboardEvent) {
   // Do not take spaces and null characters
   let userTask = taskInput.value.trim();
@@ -34,19 +75,3 @@ function saveTask(e: KeyboardEvent) {
     showTodo();
   }
 }
-function showTodo() {
-  let li = "";
-  todos.forEach((todo, id) => {
-    li += `<li class="task">
-            <div>
-              <input onclick="updateStatus(this)" type="checkbox" id="${id}">
-              <span ondblclick="editTask(this)" class="${id}">${todo.taskValue}</span>
-            </div>
-            <div class="task-close">
-              <i onclick="deleteTask(${id})" class="fa-solid fa-xmark"></i>
-            </div>
-          </li>`;
-  });
-  taskBox.innerHTML = li;
-}
-showTodo();
