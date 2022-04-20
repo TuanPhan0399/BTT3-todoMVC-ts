@@ -19,6 +19,7 @@ taskInput.addEventListener("keyup", saveTask);
 
 // window
 window.updateStatus = updateStatus;
+window.deleteTask = deleteTask;
 
 // Function
 function showTodo() {
@@ -74,4 +75,12 @@ function saveTask(e: KeyboardEvent) {
     localStorage.setItem("todo-list", JSON.stringify(todos));
     showTodo();
   }
+}
+
+// Deleted task
+function deleteTask(deleteID: number) {
+  // remove selected task
+  todos.splice(deleteID, 1);
+  localStorage.setItem("todo-list", JSON.stringify(todos));
+  showTodo();
 }
