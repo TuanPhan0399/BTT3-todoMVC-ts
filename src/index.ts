@@ -2,6 +2,7 @@ interface Todo {
   taskValue: string;
   taskStatus: string;
 }
+
 // Selector
 const taskInput = <HTMLInputElement>document.querySelector(".task-input input");
 const taskBox = <HTMLUListElement>document.querySelector(".task-box");
@@ -22,6 +23,7 @@ let taskInfo: Todo;
 // Event Listener
 taskInput.addEventListener("keyup", saveTask);
 clearAll.addEventListener("click", clearAllCompleted);
+iTaskInput.addEventListener("click", takeAll);
 
 // Work with filters
 filters.forEach((btn) => {
@@ -42,7 +44,6 @@ window.editSpan = editSpan;
 // Function
 function showTodo(filter: string) {
   let li = "";
-  let todo: object;
   countIndex = todos.length;
   if (todos) {
     todos.forEach((todo, id) => {
@@ -68,12 +69,17 @@ function showTodo(filter: string) {
       }
     });
   }
-  todo = todos.filter((todo) => todo.taskStatus === "completed");
-
+  let todo = todos.filter((todo) => todo.taskStatus === "completed");
+  if (todo.length === todos.length) {
+    iTaskInput.classList.add("tick-all");
+  } else {
+    iTaskInput.classList.remove("tick-all");
+  }
   taskBox.innerHTML = li;
 
   if (todos.length > 0) {
     controls.style.display = "flex";
+    iTaskInput.style.display = "block";
     count.innerText = countIndex.toString();
   } else {
     controls.style.display = "none";
@@ -140,6 +146,7 @@ function saveTask(e: KeyboardEvent) {
       taskValue: userTask,
       taskStatus: "pending",
     };
+    iTaskInput.classList.remove("tick-all");
     todos.push(taskInfo);
     localStorage.setItem("todo-list", JSON.stringify(todos));
     showTodo(idFilter);
@@ -151,6 +158,10 @@ function deleteTask(deleteID: number) {
   // remove selected task
   todos.splice(deleteID, 1);
   localStorage.setItem("todo-list", JSON.stringify(todos));
+  if (todos.length === 0) {
+    controls.style.display = "none";
+    iTaskInput.style.display = "none";
+  }
   showTodo(idFilter);
 }
 
@@ -219,6 +230,25 @@ function clearAllCompleted() {
     controls.style.display = "none";
   }
   clearAll.style.opacity = "0";
+  localStorage.setItem("todo-list", JSON.stringify(todos));
+  showTodo(idFilter);
+}
+
+// select all input
+function takeAll() {
+  if (iTaskInput.classList.contains("tick-all") == false) {
+    clearAll.style.opacity = "1";
+    iTaskInput.classList.add("tick-all");
+    todos.forEach((todo) => {
+      todo.taskStatus = "completed";
+    });
+  } else {
+    clearAll.style.opacity = "0";
+    iTaskInput.classList.remove("tick-all");
+    todos.forEach((todo) => {
+      todo.taskValue = "pending";
+    });
+  }
   localStorage.setItem("todo-list", JSON.stringify(todos));
   showTodo(idFilter);
 }
