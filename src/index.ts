@@ -1,3 +1,7 @@
+interface Todo {
+  taskValue: string;
+  taskStatus: string;
+}
 // Selector
 const taskInput = <HTMLInputElement>document.querySelector(".task-input input");
 const taskBox = <HTMLUListElement>document.querySelector(".task-box");
@@ -12,19 +16,12 @@ let countIndex: number;
 let idFilter: string = "all";
 
 // getting localstorage todo-list
-let todos: [
-  {
-    taskValue: string;
-    taskStatus: string;
-  }
-] = JSON.parse(localStorage.getItem("todo-list") || "[]");
-let taskInfo: {
-  taskValue: string;
-  taskStatus: string;
-};
+let todos: Todo[] = JSON.parse(localStorage.getItem("todo-list") || "[]");
+let taskInfo: Todo;
 
 // Event Listener
 taskInput.addEventListener("keyup", saveTask);
+clearAll.addEventListener("click", clearAllCompleted);
 
 // Work with filters
 filters.forEach((btn) => {
@@ -66,6 +63,9 @@ function showTodo(filter: string) {
                 </div>
               </li>`;
       }
+      if (todo.taskStatus === "completed") {
+        clearAll.style.opacity = "1";
+      }
     });
   }
   todo = todos.filter((todo) => todo.taskStatus === "completed");
@@ -83,8 +83,11 @@ showTodo(idFilter);
 
 // check iput
 function updateStatus(selectedTask: HTMLInputElement) {
+  let liTask = <HTMLLIElement>selectedTask.parentElement?.parentElement;
   // Getting paragraph that contains task name
   let taskName = <HTMLSpanElement>selectedTask.parentElement?.lastElementChild;
+  const filterStatus = Array.from(filters);
+  let filterActive = filterStatus.filter((e) => e.classList[0] === "active");
   // Getting ID
   let id = Number(selectedTask.id);
 
@@ -92,11 +95,37 @@ function updateStatus(selectedTask: HTMLInputElement) {
     taskName.classList.add("checked");
     // updating the status of selected task to completed
     todos[id].taskStatus = "completed";
+    clearAll.style.opacity = "1";
+    countIndex -= 1;
   } else {
     taskName.classList.remove("checked");
     // updating the status of selected task to pending
     todos[id].taskStatus = "pending";
+    countIndex += 1;
   }
+  // tick all
+  let todo = todos.filter((todo) => todo.taskStatus === "completed");
+  if (todo.length === todos.length) {
+    iTaskInput.classList.add("tick-all");
+  } else {
+    iTaskInput.classList.remove("tick-all");
+  }
+  // fix clear all
+  let todoPending = todos.filter(
+    (todoPending) => todoPending.taskStatus === "pending"
+  );
+  if (todoPending.length === todos.length) {
+    clearAll.style.opacity = "0";
+  }
+  // fix bug active
+  if (filterActive[0].id === "completed" && selectedTask.checked === false) {
+    liTask.style.display = "none";
+  } else if (filterActive[0].id === "pending" && selectedTask.checked) {
+    liTask.style.display = "none";
+  } else if (filterActive[0].id === "all") {
+    liTask.style.display = "flex";
+  }
+  count.innerText = countIndex.toString();
   localStorage.setItem("todo-list", JSON.stringify(todos));
 }
 
@@ -178,4 +207,18 @@ function editSpan(input: HTMLInputElement) {
     localStorage.setItem("todo-list", JSON.stringify(todos));
     showTodo(idFilter);
   });
+}
+console.log(typeof todos);
+// clear all
+function clearAllCompleted() {
+  // removing selected task
+  const todos2 = todos.filter((todo) => todo.taskStatus !== "completed");
+  todos = todos2;
+  if (todos.length === 0) {
+    iTaskInput.style.display = "none";
+    controls.style.display = "none";
+  }
+  clearAll.style.opacity = "0";
+  localStorage.setItem("todo-list", JSON.stringify(todos));
+  showTodo(idFilter);
 }
