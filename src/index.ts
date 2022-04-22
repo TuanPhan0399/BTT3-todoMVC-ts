@@ -39,7 +39,6 @@ filters.forEach((btn) => {
 window.updateStatus = updateStatus;
 window.deleteTask = deleteTask;
 window.editTask = editTask;
-window.editSpan = editSpan;
 
 // Function
 function showTodo(filter: string) {
@@ -57,7 +56,7 @@ function showTodo(filter: string) {
         li += `<li class="task">
                 <div>
                   <input onchange="updateStatus(this)" type="checkbox" id="${id}" ${isCompleted}>
-                  <span ondblclick="editTask(this)" class="${id} ${isCompleted}">${todo.taskValue}</span>
+                  <input ondblclick="editTask(this)" type="text" value="${todo.taskValue}" class="${id} ${isCompleted}" readOnly>
                 </div>
                 <div class="task-close">
                   <i onclick="deleteTask(${id})" class="fa-solid fa-xmark"></i>
@@ -162,64 +161,129 @@ function deleteTask(deleteID: number) {
     controls.style.display = "none";
     iTaskInput.style.display = "none";
   }
+  let todo2 = todos.filter((todo) => todo.taskStatus === "completed");
+  if (todo2.length === 0) {
+    clearAll.style.opacity = "0";
+  }
   showTodo(idFilter);
 }
 
 // Data editing function
-function editTask(span: HTMLSpanElement) {
+function editTask(input: HTMLInputElement) {
   const taskClose = <HTMLDivElement>(
-    span.parentElement?.parentElement?.lastElementChild
+    input.parentElement?.parentElement?.lastElementChild
   );
-  const input = <HTMLInputElement>span.parentElement?.firstElementChild;
+  const inputCheck = <HTMLInputElement>input.parentElement?.firstElementChild;
+  const id = Number(input.classList[0]);
   taskClose.style.opacity = "0";
-  input.style.opacity = "0";
-  let valueInput: string = span.innerText;
-  span.innerText = "";
-  span.innerHTML += `<input onclick="editSpan(this)" type="text" value="${valueInput}"></input>`;
+  inputCheck.style.opacity = "0";
+  input.style.border = "1px solid #999";
+  input.readOnly = false;
+  input.setSelectionRange(input.value.length, input.value.length);
+  if (input.classList.contains("checked")) {
+    input.classList.remove("checked");
+    input.addEventListener("keyup", function (event) {
+      if (event.key === "Enter") {
+        input.removeEventListener("blur", onBlur);
+        if (input.value.trim()) {
+          // fix bug edit input and task close;
+          taskClose.style.opacity = "1";
+          inputCheck.style.opacity = "1";
+          todos[id].taskValue = input.value.trim();
+          input.classList.add("checked");
+          localStorage.setItem("todo-list", JSON.stringify(todos));
+          showTodo(idFilter);
+        } else {
+          todos.splice(id, 1);
+          let todos2 = todos.filter((todo) => todo.taskStatus === "completed");
+          if (todos2.length === 0) {
+            clearAll.style.opacity = "0";
+          }
+          if (todos.length === 0) {
+            iTaskInput.style.display = "none";
+          }
+          localStorage.setItem("todo-list", JSON.stringify(todos));
+          showTodo(idFilter);
+        }
+      }
+    });
+
+    // add onblur
+    input.addEventListener("blur", onBlur);
+    function onBlur() {
+      if (input.value.trim()) {
+        // fix bug edit input and task close;
+        taskClose.style.opacity = "1";
+        inputCheck.style.opacity = "1";
+        todos[id].taskValue = input.value.trim();
+        input.classList.add("checked");
+        localStorage.setItem("todo-list", JSON.stringify(todos));
+        showTodo(idFilter);
+      } else {
+        todos.splice(id, 1);
+        let todos2 = todos.filter((todo) => todo.taskStatus === "completed");
+        if (todos2.length === 0) {
+          clearAll.style.opacity = "0";
+        }
+        if (todos.length === 0) {
+          iTaskInput.style.display = "none";
+        }
+        localStorage.setItem("todo-list", JSON.stringify(todos));
+        showTodo(idFilter);
+      }
+    }
+  } else {
+    input.addEventListener("keyup", function (event) {
+      if (event.key === "Enter") {
+        input.removeEventListener("blur", onBlur);
+        if (input.value.trim()) {
+          // fix bug edit input and task close;
+          taskClose.style.opacity = "1";
+          inputCheck.style.opacity = "1";
+          todos[id].taskValue = input.value.trim();
+          localStorage.setItem("todo-list", JSON.stringify(todos));
+          showTodo(idFilter);
+        } else {
+          todos.splice(id, 1);
+          let todos2 = todos.filter((todo) => todo.taskStatus === "completed");
+          if (todos2.length === 0) {
+            clearAll.style.opacity = "0";
+          }
+          if (todos.length === 0) {
+            iTaskInput.style.display = "none";
+          }
+          localStorage.setItem("todo-list", JSON.stringify(todos));
+          showTodo(idFilter);
+        }
+      }
+    });
+
+    // add onblur
+    input.addEventListener("blur", onBlur);
+    function onBlur() {
+      if (input.value.trim()) {
+        // fix bug edit input and task close;
+        taskClose.style.opacity = "1";
+        inputCheck.style.opacity = "1";
+        todos[id].taskValue = input.value.trim();
+        localStorage.setItem("todo-list", JSON.stringify(todos));
+        showTodo(idFilter);
+      } else {
+        todos.splice(id, 1);
+        let todos2 = todos.filter((todo) => todo.taskStatus === "completed");
+        if (todos2.length === 0) {
+          clearAll.style.opacity = "0";
+        }
+        if (todos.length === 0) {
+          iTaskInput.style.display = "none";
+        }
+        localStorage.setItem("todo-list", JSON.stringify(todos));
+        showTodo(idFilter);
+      }
+    }
+  }
 }
 
-// new data editting add with local
-function editSpan(input: HTMLInputElement) {
-  const span = <HTMLSpanElement>input.parentElement;
-  const tickInput = <HTMLInputElement>span.parentElement?.firstElementChild;
-  const taskClose = <HTMLDivElement>(
-    span.parentElement?.parentElement?.lastElementChild
-  );
-  const id = Number(span.classList[0]);
-
-  // add enter
-  input.addEventListener("keyup", (event: KeyboardEvent) => {
-    if (event.key === "Enter" && input.value.trim()) {
-      event.preventDefault();
-      span.innerText = input.value.trim();
-      input.style.display = "none";
-      taskClose.style.opacity = "1";
-      tickInput.style.opacity = "1";
-      todos[id].taskValue = span.innerText;
-      localStorage.setItem("todo-list", JSON.stringify(todos));
-    } else if (event.key === "Enter" && input.value === "") {
-      todos.splice(id, 1);
-      localStorage.setItem("todo-list", JSON.stringify(todos));
-      showTodo(idFilter);
-    }
-  });
-  // add blur
-  input.addEventListener("blur", (event) => {
-    if (input.value.trim()) {
-      event.preventDefault();
-      span.innerText = input.value.trim();
-      input.style.display = "none";
-      taskClose.style.opacity = "1";
-      tickInput.style.opacity = "1";
-      todos[id].taskValue = span.innerText;
-    } else {
-      todos.splice(id, 1);
-    }
-    localStorage.setItem("todo-list", JSON.stringify(todos));
-    showTodo(idFilter);
-  });
-}
-console.log(typeof todos);
 // clear all
 function clearAllCompleted() {
   // removing selected task
@@ -236,7 +300,7 @@ function clearAllCompleted() {
 
 // select all input
 function takeAll() {
-  if (iTaskInput.classList.contains("tick-all") == false) {
+  if (iTaskInput.classList.contains("tick-all") === false) {
     clearAll.style.opacity = "1";
     iTaskInput.classList.add("tick-all");
     todos.forEach((todo) => {
@@ -246,7 +310,7 @@ function takeAll() {
     clearAll.style.opacity = "0";
     iTaskInput.classList.remove("tick-all");
     todos.forEach((todo) => {
-      todo.taskValue = "pending";
+      todo.taskStatus = "pending";
     });
   }
   localStorage.setItem("todo-list", JSON.stringify(todos));
